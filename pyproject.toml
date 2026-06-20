@@ -29,9 +29,9 @@ dependencies = [
 ]
 
 [project.scripts]
-fc-play = "fc_play.cli.entrypoints:cli"
-fc-play-server = "fc_play.cli.entrypoints:server_main"
-fc-play-admin = "fc_play.cli.entrypoints:admin_main"
+fc-play = "fc_play.cli.entrypoints:cli_entry"
+fc-server = "fc_play.cli.entrypoints:server_main"
+fc-admin = "fc_play.cli.entrypoints:admin_main"
 fc-play-tui = "fc_play.cli.entrypoints:tui_main"
 
 [project.optional-dependencies]

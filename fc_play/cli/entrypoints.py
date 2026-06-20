@@ -1,7 +1,10 @@
-"""FC-Play CLI — typer-based command interface with server/tui/admin/status."""
+"""FC-Play CLI — commands and entry points for fc-play, fc-server, fc-admin."""
 
 from __future__ import annotations
 
+import os
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 from typing import Optional
@@ -31,7 +34,65 @@ def _banner():
 └────────────────────────────────────────────┘[/]""")
 
 
-# ─── Server ────────────────────────────────────────────────────────────────
+# ─── Claude Launcher ───────────────────────────────────────────────────────
+
+def _launch_claude():
+    """Launch Claude Code through local proxy."""
+    from fc_play.config.settings import get_settings
+    settings = get_settings()
+
+    # Check whether proxy server is already running
+    import urllib.request
+    import urllib.error
+    proxy_alive = False
+    try:
+        urllib.request.urlopen(f"http://127.0.0.1:{settings.port}/health", timeout=2)
+        proxy_alive = True
+    except Exception:
+        proxy_alive = False
+
+    if not proxy_alive:
+        console.print("[bold #f97316]✦ Starting proxy server...[/]")
+        # Start server in background
+        import multiprocessing
+        p = multiprocessing.Process(target=_run_server, args=(settings.host, settings.port, settings.log_level), daemon=True)
+        p.start()
+        import time
+        time.sleep(1.5)  # brief wait for startup
+        console.print(f"[dim]Proxy running on [bold]{settings.host}:{settings.port}[/][/]")
+
+    # Find claude CLI
+    claude_bin = shutil.which("claude")
+    if not claude_bin:
+        console.print("[red]✖ Claude CLI not found.[/]")
+        console.print()
+        console.print("  Install it first:")
+        console.print("    [bold]macOS / Linux:[/]  npm install -g @anthropic-ai/claude-code")
+        console.print("    [bold]Windows:[/]        npm install -g @anthropic-ai/claude-code")
+        console.print()
+        console.print("  Or download from: https://claude.ai/download")
+        raise SystemExit(1)
+
+    console.print(f"[bold #f97316]✦[/] Launching Claude via [bold]fc-play[/] proxy...")
+    console.print()
+
+    # Set proxy env
+    env = os.environ.copy()
+    env["ANTHROPIC_BASE_URL"] = f"http://{settings.host}:{settings.port}"
+    if settings.anthropic_api_key:
+        env["ANTHROPIC_API_KEY"] = settings.anthropic_api_key
+
+    subprocess.run([claude_bin], env=env, check=False)
+
+
+def _run_server(host: str, port: int, log_level: str):
+    """Start uvicorn server (used by background launch)."""
+    import uvicorn
+    uvicorn.run("server:app", host=host, port=port,
+                log_level=log_level.lower(), timeout_graceful_shutdown=5)
+
+
+# ─── Commands ──────────────────────────────────────────────────────────────
 
 @cli.command()
 def server(
@@ -39,19 +100,23 @@ def server(
     port: int = typer.Option(3010, "--port", "-p", help="Port"),
     env: Optional[Path] = typer.Option(None, "--env", "-e", help=".env path"),
     log_level: str = typer.Option("INFO", "--log-level", "-l"),
+    open: bool = typer.Option(False, "--open", "-o", help="Open admin browser"),
 ):
-    """Start the FC-Play proxy server."""
+    """Start the proxy server."""
     _banner()
     if env:
         from dotenv import load_dotenv
         load_dotenv(env)
+
+    if open:
+        import webbrowser
+        webbrowser.open(f"http://127.0.0.1:{port}/admin")
+
     import uvicorn
     console.print(f"[dim]Starting server on [bold]{host}:{port}[/][/]")
     uvicorn.run("server:app", host=host, port=port,
                 log_level=log_level.lower(), timeout_graceful_shutdown=5)
 
-
-# ─── TUI ───────────────────────────────────────────────────────────────────
 
 @cli.command()
 def tui(
@@ -63,25 +128,16 @@ def tui(
     run_tui(theme=theme)
 
 
-# ─── Admin ─────────────────────────────────────────────────────────────────
-
 @cli.command()
 def admin(
     port: int = typer.Option(3010, "--port", "-p", help="Server port"),
-    open: bool = typer.Option(False, "--open", "-o", help="Open browser"),
 ):
-    """Start server with admin UI."""
+    """Open admin UI in browser."""
     import webbrowser
     url = f"http://127.0.0.1:{port}/admin"
     console.print(f"[bold #f97316]✦[/] Admin UI: [bold]{url}[/]")
-    if open:
-        webbrowser.open(url)
-    import uvicorn
-    uvicorn.run("server:app", host="0.0.0.0", port=port, log_level="info",
-                timeout_graceful_shutdown=5)
+    webbrowser.open(url)
 
-
-# ─── Status ────────────────────────────────────────────────────────────────
 
 @cli.command()
 def status():
@@ -113,13 +169,7 @@ def status():
     t.add_row("Log Level", settings.log_level)
     console.print(t)
     console.print()
-    console.print("[bold #f97316]Commands:[/]")
-    console.print("  fc-play server  —  Start proxy")
-    console.print("  fc-play tui     —  Dashboard")
-    console.print("  fc-play admin   —  Admin UI")
 
-
-# ─── Version ───────────────────────────────────────────────────────────────
 
 @cli.command()
 def version():
@@ -128,22 +178,31 @@ def version():
     console.print(f"[dim]{APP_TAGLINE}[/]")
 
 
-@cli.callback()
-def main_callback():
-    pass
+@cli.callback(invoke_without_command=True)
+def main_callback(ctx: typer.Context):
+    """FC-Play — Multi-provider model gateway."""
+    if ctx.invoked_subcommand is None:
+        _launch_claude()
 
 
-# ─── Entry points ─────────────────────────────────────────────────────────
+# ─── Entry points for pip-installed scripts ───────────────────────────────
+
+def cli_entry():
+    """Entry point for fc-play (launches Claude by default)."""
+    cli()
+
 
 def server_main():
-    """Entry point for fc-play-server."""
-    sys.argv = ["fc-play", "server"]
+    """Entry point for fc-server — start proxy + open admin."""
+    sys.argv = ["fc-server", "server", "--open"]
     cli()
 
+
 def admin_main():
-    """Entry point for fc-play-admin."""
-    sys.argv = ["fc-play", "admin"]
+    """Entry point for fc-admin — open admin UI in browser."""
+    sys.argv = ["fc-admin", "admin"]
     cli()
+
 
 def tui_main():
     """Entry point for fc-play-tui."""

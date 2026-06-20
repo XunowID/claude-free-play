@@ -23,6 +23,31 @@
 
 ---
 
+## 🔧 Prerequisites
+
+Sebelum install, pastikan sudah siap:
+
+### macOS / Linux
+| Tool | Cara Install |
+|------|-------------|
+| **Python 3.12+** | `uv python install 3.12` (via uv) atau [python.org](https://python.org) |
+| **uv** (wajib) | `curl -LsSf https://astral.sh/uv/install.sh | sh` |
+| **Git** | `brew install git` atau `apt install git` / `pacman -S git` |
+| **Claude CLI** (untuk `fc-play`) | `npm install -g @anthropic-ai/claude-code` |
+| **curl** | Usually pre-installed |
+
+### Windows (PowerShell)
+| Tool | Cara Install |
+|------|-------------|
+| **Python 3.12+** | `uv python install 3.12` (via uv) atau [python.org](https://python.org) |
+| **uv** (wajib) | `powershell -c "irm https://astral.sh/uv/install.ps1 | iex"` |
+| **Git** | [git-scm.com](https://git-scm.com) atau `winget install Git.Git` |
+| **Claude CLI** (untuk `fc-play`) | `npm install -g @anthropic-ai/claude-code` |
+
+> **Catatan:** Claude CLI (`claude`) hanya diperlukan kalau mau pakai `fc-play` untuk masuk ke Claude. Kalau cuma mau proxy servernya aja, cukup Python + uv.
+
+---
+
 ## 🚀 Quick Install
 
 ```bash
@@ -45,18 +70,36 @@ uv sync
 
 ## 🎯 Commands
 
+### Prefixes — Pilih sesuai kebutuhan
+
+| Command | Fungsi |
+|---------|--------|
+| `fc-play` | 🎮 Masuk ke Claude via proxy |
+| `fc-server` | 🌐 Start proxy server + buka admin otomatis |
+| `fc-admin` | 🖥️ Buka panel admin di browser |
+| `fc-play-tui` | 📊 Launch terminal dashboard |
+
+### Detail
+
 ```bash
-# Start the proxy server
-fc-play server
+# Masuk ke Claude via proxy (auto-start server jika belum jalan)
+fc-play
+
+# Start proxy server + langsung buka admin panel
+fc-server
+
+# Buka admin panel di browser (server harus sudah jalan)
+fc-admin
 
 # Launch terminal dashboard
-fc-play tui --theme midnight
+fc-play-tui --theme midnight
 
-# Open admin web console
-fc-play admin --open
-
-# Check status
+# Atau via subcommand (sama aja)
+fc-play server --open
+fc-play admin
+fc-play tui --theme emerald
 fc-play status
+fc-play version
 ```
 
 ---
@@ -111,9 +154,9 @@ HOST=0.0.0.0
 ## 🎨 Themes
 
 ```bash
-fc-play tui --theme midnight   # indigo + dark
-fc-play tui --theme emerald    # green + dark
-fc-play tui --theme ruby       # crimson + dark
+fc-play-tui --theme midnight   # indigo + dark
+fc-play-tui --theme emerald    # green + dark
+fc-play-tui --theme ruby       # crimson + dark
 ```
 
 ---
