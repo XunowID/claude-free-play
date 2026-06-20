@@ -1,7 +1,7 @@
 # FC-Play Agent Instructions
 
 This project is **fc-play** — a next-gen proxy & CLI toolkit for AI models.
-Built with ❤️ by Fable No Mercy.
+Built with ❤️ by XunowID and zahrinurrasyiid.
 
 ## Architecture
 

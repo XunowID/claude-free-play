@@ -1,7 +1,7 @@
 # =============================================================================
 # FC-Play Installer (Windows PowerShell)
 # =============================================================================
-# Invoke-Expression (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Alishahryar1/fc-play/main/scripts/install.ps1").Content
+# Invoke-Expression (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/XunowID/fc-play/main/scripts/install.ps1").Content
 #
 # Or with extras:
 #   ...install.ps1 -VoiceNim -VoiceLocal
@@ -31,7 +31,7 @@ Usage: install.ps1 [options]
 
 if ($Help) { Show-Usage }
 
-$REPO = "git+https://github.com/Alishahryar1/fc-play.git"
+$REPO = "git+https://github.com/XunowID/fc-play.git"
 $PYTHON_VERSION = "3.12"
 $MIN_UV = "0.4.0"
 

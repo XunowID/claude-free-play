@@ -1,4 +1,4 @@
-"""FC-Play CLI entrypoints — typer-based command-line interface."""
+"""FC-Play CLI — typer-based command interface with server/tui/admin/status."""
 
 from __future__ import annotations
 
@@ -9,7 +9,6 @@ from typing import Optional
 import typer
 from rich.console import Console
 from rich.table import Table
-from rich.text import Text
 
 from fc_play.config.constants import APP_DISPLAY, APP_TAGLINE
 
@@ -19,140 +18,137 @@ cli = typer.Typer(
     no_args_is_help=True,
     rich_markup_mode="rich",
 )
-
 console = Console()
 
+# ─── Banner ────────────────────────────────────────────────────────────────
 
-def _print_banner():
-    """Print the FC-Play startup banner."""
-    banner = f"""
-[bold #6366f1]╔════════════════════════════════════════════╗
-║            FC-PLAY v1.0.0                  ║
-║     Play with Claude — Free. Fast.         ║
-║     Fabulous.                              ║
-╚════════════════════════════════════════════╝[/]"""
-    console.print(banner)
+def _banner():
+    console.print(f"""
+[bold #f97316]┌────────────────────────────────────────────┐
+│         FC-PLAY  v1.0.0                     │
+│   Multi-provider model gateway              │
+│   Fast. Flexible. Fabulous.                 │
+└────────────────────────────────────────────┘[/]""")
 
+
+# ─── Server ────────────────────────────────────────────────────────────────
 
 @cli.command()
 def server(
     host: str = typer.Option("0.0.0.0", "--host", help="Bind address"),
-    port: int = typer.Option(8083, "--port", "-p", help="Server port"),
-    env: Optional[Path] = typer.Option(None, "--env", "-e", help="Path to .env file", exists=True),
-    log_level: str = typer.Option("INFO", "--log-level", "-l", help="Log level"),
+    port: int = typer.Option(8083, "--port", "-p", help="Port"),
+    env: Optional[Path] = typer.Option(None, "--env", "-e", help=".env path"),
+    log_level: str = typer.Option("INFO", "--log-level", "-l"),
 ):
     """Start the FC-Play proxy server."""
-    _print_banner()
-
+    _banner()
     if env:
         from dotenv import load_dotenv
         load_dotenv(env)
-
-    console.print(f"[dim]Starting server on [bold]{host}:{port}[/]...[/]")
-
     import uvicorn
-    uvicorn.run(
-        "server:app",
-        host=host,
-        port=port,
-        log_level=log_level.lower(),
-        timeout_graceful_shutdown=5,
-        reload=False,
-    )
+    console.print(f"[dim]Starting server on [bold]{host}:{port}[/][/]")
+    uvicorn.run("server:app", host=host, port=port,
+                log_level=log_level.lower(), timeout_graceful_shutdown=5)
 
+
+# ─── TUI ───────────────────────────────────────────────────────────────────
 
 @cli.command()
 def tui(
-    theme: str = typer.Option("midnight", "--theme", "-t", help="Theme: midnight, emerald, ruby"),
+    theme: str = typer.Option("midnight", "--theme", "-t",
+                              help="midnight | emerald | ruby"),
 ):
-    """Launch the interactive terminal dashboard."""
+    """Launch the terminal dashboard."""
     from fc_play.tui.app import run_tui
     run_tui(theme=theme)
 
 
+# ─── Admin ─────────────────────────────────────────────────────────────────
+
 @cli.command()
 def admin(
     port: int = typer.Option(8083, "--port", "-p", help="Server port"),
+    open: bool = typer.Option(False, "--open", "-o", help="Open browser"),
 ):
-    """Start the server and open the admin web UI."""
+    """Start server with admin UI."""
     import webbrowser
     url = f"http://127.0.0.1:{port}/admin"
-    console.print(f"[bold #6366f1]✦[/] Opening admin UI: [bold]{url}[/]")
-    webbrowser.open(url)
-
+    console.print(f"[bold #f97316]✦[/] Admin UI: [bold]{url}[/]")
+    if open:
+        webbrowser.open(url)
     import uvicorn
-    uvicorn.run(
-        "server:app",
-        host="0.0.0.0",
-        port=port,
-        log_level="info",
-        timeout_graceful_shutdown=5,
-    )
+    uvicorn.run("server:app", host="0.0.0.0", port=port, log_level="info",
+                timeout_graceful_shutdown=5)
 
+
+# ─── Status ────────────────────────────────────────────────────────────────
 
 @cli.command()
 def status():
-    """Show current server status and configuration."""
-    _print_banner()
-
+    """Show current configuration status."""
+    _banner()
     try:
         from fc_play.config.settings import get_settings
         settings = get_settings()
     except Exception as e:
-        console.print(f"[red]Failed to load settings: {e}[/]")
+        console.print(f"[red]Failed: {e}[/]")
         return
 
-    table = Table(show_header=False, box=None, padding=(0, 2))
-    table.add_column("Setting", style="bold #71717a", no_wrap=True)
-    table.add_column("Value", style="#f4f4f5")
+    t = Table(show_header=False, box=None, padding=(0, 2))
+    t.add_column("Key", style="bold #78716c", no_wrap=True)
+    t.add_column("Value", style="#f5f5f4")
 
-    table.add_row("Server", f"0.0.0.0:{settings.port}")
-    table.add_row("Model", settings.model)
-    table.add_row("Opus", settings.model_opus or "—")
-    table.add_row("Sonnet", settings.model_sonnet or "—")
-    table.add_row("Haiku", settings.model_haiku or "—")
-    table.add_row("Custom API", "✓ Configured" if settings.custom_api_key else "○ No key")
-    table.add_row("Thinking", "Enabled" if settings.enable_thinking else "Disabled")
-    table.add_row("Rate Limit", f"{settings.rate_limit_requests}/min")
-    table.add_row("Log Level", settings.log_level)
+    t.add_row("Server", f"{settings.host}:{settings.port}")
+    t.add_row("Model", settings.model)
+    t.add_row("Opus-tier", settings.model_opus or "—")
+    t.add_row("Sonnet-tier", settings.model_sonnet or "—")
+    t.add_row("Haiku-tier", settings.model_haiku or "—")
 
-    console.print(table)
+    providers = settings.configured_providers()
+    active = [k for k, v in providers.items() if v]
+    t.add_row("Active Providers", ", ".join(active) if active else "none")
 
-    # Key info
+    t.add_row("Rate Limit", f"{settings.rate_limit_requests}/{settings.rate_limit_window}s")
+    t.add_row("Thinking", "Enabled" if settings.enable_thinking else "Disabled")
+    t.add_row("Log Level", settings.log_level)
+    console.print(t)
     console.print()
-    console.print(f"[bold #6366f1]Quick Start:[/]")
-    console.print(f"  fc-play server    — Start proxy server")
-    console.print(f"  fc-play tui       — Launch dashboard")
-    console.print(f"  fc-play admin     — Open admin UI")
+    console.print("[bold #f97316]Commands:[/]")
+    console.print("  fc-play server  —  Start proxy")
+    console.print("  fc-play tui     —  Dashboard")
+    console.print("  fc-play admin   —  Admin UI")
 
+
+# ─── Version ───────────────────────────────────────────────────────────────
 
 @cli.command()
 def version():
-    """Show version information."""
-    console.print(f"[bold #6366f1]{APP_DISPLAY}[/] [dim]v1.0.0[/]")
+    """Show version."""
+    console.print(f"[bold #f97316]{APP_DISPLAY}[/] v1.0.0")
     console.print(f"[dim]{APP_TAGLINE}[/]")
 
 
 @cli.callback()
 def main_callback():
-    """FC-Play main entry point."""
     pass
 
 
-# Also export as direct functions
+# ─── Entry points ─────────────────────────────────────────────────────────
+
 def server_main():
     """Entry point for fc-play-server."""
-    cli(["server"])
-
+    sys.argv = ["fc-play", "server"]
+    cli()
 
 def admin_main():
     """Entry point for fc-play-admin."""
-    cli(["admin"])
-
+    sys.argv = ["fc-play", "admin"]
+    cli()
 
 def tui_main():
     """Entry point for fc-play-tui."""
-    cli(["tui"])
+    sys.argv = ["fc-play", "tui"]
+    cli()
 
 
 if __name__ == "__main__":

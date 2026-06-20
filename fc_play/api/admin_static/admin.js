@@ -1,322 +1,330 @@
-/* =============================================================================
-   FC-Play Admin — Dashboard Controller
-   Swiss Minimalism × Dark OLED — Smooth UX
-   ============================================================================= */
+/* ===========================================================================
+   FC-Play · Gateway Console — Controller
+   Distinct from free-claude-code: top tabs, warm palette, compact layout
+   =========================================================================== */
 
-// ---------------------------------------------------------------------------
-// State
-// ---------------------------------------------------------------------------
-const state = {
-  config: null,
-  dirtyFields: new Map(),
-  activeView: 'providers',
-};
+// ── State ─────────────────────────────────────────────────────────────────
+const S = { config: null, dirty: new Map(), view: 'dashboard' };
+const M = '•'.repeat(8); // masked
 
-const MASKED = '••••••••';
+// ── DOM ───────────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const $$ = s => document.querySelectorAll(s);
 
-// ---------------------------------------------------------------------------
-// View definitions
-// ---------------------------------------------------------------------------
+function toast(msg, type = 'info') {
+  const b = $('toastBox');
+  const t = document.createElement('div');
+  t.className = `toast ${type === 'success' ? 'good' : type === 'error' ? 'bad' : 'info'}`;
+  t.textContent = msg;
+  b.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+// ── API ───────────────────────────────────────────────────────────────────
+async function api(path, opts = {}) {
+  const r = await fetch(path, { headers: { 'Content-Type': 'application/json', ...opts.headers }, ...opts });
+  if (!r.ok) {
+    const e = await r.json().catch(() => ({ error: r.statusText }));
+    throw new Error(e.error || e.detail || r.statusText);
+  }
+  return r.json();
+}
+
+// ── Views ─────────────────────────────────────────────────────────────────
 const VIEWS = [
-  { id: 'providers', label: 'Providers', icon: 'cube', title: 'Providers & Configuration' },
-  { id: 'status', label: 'Status', icon: 'activity', title: 'Server Status' },
+  { id: 'dashboard', label: 'Dashboard', title: 'Dashboard' },
+  { id: 'providers', label: 'Providers', title: 'Provider Configuration' },
+  { id: 'models',    label: 'Models',    title: 'Model Routing' },
+  { id: 'settings',  label: 'Settings',  title: 'Settings' },
 ];
 
-const NAV_ICONS = {
-  cube: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
-  activity: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
-  settings: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>',
-};
-
-// ---------------------------------------------------------------------------
-// DOM helpers
-// ---------------------------------------------------------------------------
-const $ = (id) => document.getElementById(id);
-const $$ = (sel) => document.querySelectorAll(sel);
-
-function showToast(message, type = 'info') {
-  const container = $('toastContainer');
-  const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-  toast.textContent = message;
-  container.appendChild(toast);
-  setTimeout(() => toast.remove(), 4000);
-}
-
-// ---------------------------------------------------------------------------
-// API
-// ---------------------------------------------------------------------------
-async function api(path, options = {}) {
-  const res = await fetch(path, {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
-    ...options,
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || err.detail || res.statusText);
-  }
-  return res.json();
-}
-
-// ---------------------------------------------------------------------------
-// Initialization
-// ---------------------------------------------------------------------------
-async function load() {
-  try {
-    const data = await api('/admin/api/config');
-    state.config = data;
-    renderNav();
-    renderProviders(data.provider_status || {});
-    renderConfigSections(data.sections || {});
-    updateDirtyState();
-    showToast('Dashboard loaded', 'info');
-  } catch (err) {
-    showToast(`Failed to load config: ${err.message}`, 'error');
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Navigation
-// ---------------------------------------------------------------------------
 function renderNav() {
-  const nav = $('sectionNav');
-  nav.innerHTML = VIEWS.map((v, i) => `
-    <button class="nav-link ${i === 0 ? 'active' : ''}"
-            onclick="setActiveView('${v.id}')"
-            data-view="${v.id}">
-      ${NAV_ICONS[v.icon] || ''}
-      ${v.label}
-    </button>
-  `).join('');
+  $('topNav').innerHTML = VIEWS.map((v, i) =>
+    `<button class="tab ${i===0?'active':''}" data-view="${v.id}" onclick="switchView('${v.id}')">${v.label}</button>`
+  ).join('');
 }
 
-function setActiveView(viewId) {
-  state.activeView = viewId;
-  $$('.nav-link').forEach(el => el.classList.toggle('active', el.dataset.view === viewId));
-  $$('.admin-view').forEach(el => el.hidden = el.id !== `view-${viewId}`);
-  const view = VIEWS.find(v => v.id === viewId);
-  if (view) $('pageTitle').textContent = view.title;
+function switchView(id) {
+  S.view = id;
+  $$('.tab').forEach(e => e.classList.toggle('active', e.dataset.view === id));
+  $$('.view-pane').forEach(e => e.classList.toggle('active', e.id === `pane-${id}`));
+  const v = VIEWS.find(x => x.id === id);
+  if (v) $('pageTitle').textContent = v.title;
 }
 
-// ---------------------------------------------------------------------------
-// Provider Grid
-// ---------------------------------------------------------------------------
-const PROVIDER_ICONS = {
-  custom: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>',
-  openai: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"/><line x1="12" y1="22" x2="12" y2="15.5"/><polyline points="22 8.5 12 15.5 2 8.5"/></svg>',
-  default: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><box x="3" y="3" width="18" height="18"/><path d="M3 9h18"/></svg>',
-};
+// ── Dashboard ──────────────────────────────────────────────────────────────
+function renderDashboard(sections, provStatus) {
+  const pane = document.createElement('div');
+  pane.id = 'pane-dashboard';
+  pane.className = 'view-pane active';
 
-function statusPill(status) {
-  const labels = { ok: 'Connected', warn: 'No Key', error: 'Offline', neutral: 'Unknown' };
-  return `<span class="status-pill ${status}"><span class="dot"></span> ${labels[status] || status}</span>`;
-}
+  const allOk = Object.values(provStatus||{}).filter(p => p.status === 'on').length;
+  const allTotal = Object.keys(provStatus||{}).length;
 
-function renderProviders(providers) {
-  const grid = $('providerGrid');
-  const entries = Object.entries(providers);
-  $('providerCount').textContent = `${entries.filter(([_, p]) => p.status === 'ok').length} connected`;
-
-  grid.innerHTML = entries.map(([id, provider]) => `
-    <div class="provider-card" data-provider="${id}">
-      <div class="provider-card-title">
-        ${PROVIDER_ICONS[id] || PROVIDER_ICONS.default}
-        ${provider.label || id}
+  pane.innerHTML = `
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-icon green">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </div>
+        <div><span class="stat-num">${allOk}/${allTotal}</span><span class="stat-lbl">Connected Providers</span></div>
       </div>
-      <div class="provider-card-meta">
-        ${statusPill(provider.status)}
+      <div class="stat-card">
+        <div class="stat-icon amber">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        </div>
+        <div><span class="stat-num" id="statModels">${Object.keys(provStatus||{}).length}</span><span class="stat-lbl">Available Models</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon blue">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
+        </div>
+        <div><span class="stat-num">0</span><span class="stat-lbl">Active Requests</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon neutral">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div><span class="stat-num" id="uptimeVal">0s</span><span class="stat-lbl">Uptime</span></div>
       </div>
     </div>
-  `).join('');
-}
+    <div class="section">
+      <div class="section-head"><h2>Connected Providers</h2><span class="section-tag">Status</span></div>
+      <div class="prov-grid" id="dashProvGrid"></div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h2>Recent Activity</h2><span class="section-tag">Log</span></div>
+      <div class="log-panel"><div class="log-empty">No activity yet. Start using the gateway.</div></div>
+    </div>
+  `;
 
-// ---------------------------------------------------------------------------
-// Config Sections
-// ---------------------------------------------------------------------------
-function renderConfigSections(sections) {
-  const container = $('configSections');
-  container.innerHTML = '';
+  $('viewContainer').appendChild(pane);
 
-  Object.entries(sections).forEach(([key, section], idx) => {
-    const sectionEl = document.createElement('div');
-    sectionEl.className = 'config-section';
-
-    const regularFields = section.fields.filter(f => !f.advanced);
-    const advancedFields = section.fields.filter(f => f.advanced);
-
-    sectionEl.innerHTML = `
-      <div class="config-section-title">${section.label}</div>
-      <div class="field-grid" data-section="${key}">
-        ${regularFields.map(f => renderField(f)).join('')}
+  // Render mini provider grid
+  const pg = $('dashProvGrid');
+  pg.innerHTML = Object.entries(provStatus||{}).map(([id, p]) =>
+    `<div class="prov-card">
+      <div class="prov-card-top">
+        <span class="prov-name">${p.label||id}</span>
+        <span class="badge ${p.status}"></span>
       </div>
-      ${advancedFields.length ? `
-        <div class="advanced-section">
-          <button class="advanced-toggle" onclick="this.classList.toggle('active'); this.nextElementSibling.classList.toggle('show')">
-            <svg class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-            Advanced Settings (${advancedFields.length})
-          </button>
-          <div class="advanced-fields">
-            ${advancedFields.map(f => renderField(f)).join('')}
-          </div>
-        </div>
-      ` : ''}
-    `;
+      <div class="prov-meta">${p.status === 'on' ? 'Connected' : 'No key'}</div>
+    </div>`
+  ).join('');
 
-    container.appendChild(sectionEl);
-  });
+  // Uptime
+  let sec = 0;
+  setInterval(() => {
+    sec++;
+    $('uptimeVal').textContent = sec < 60 ? `${sec}s` : `${Math.floor(sec/60)}m ${sec%60}s`;
+  }, 1000);
 }
 
-function renderField(field) {
-  const inputId = `field-${field.key}`;
-  const value = field.value ?? '';
-  const isSecret = field.secret;
-  const displayValue = isSecret && value ? MASKED : value;
+// ── Providers Pane ────────────────────────────────────────────────────────
+function renderProviders(provStatus) {
+  const pane = document.createElement('div');
+  pane.id = 'pane-providers';
+  pane.className = 'view-pane';
+
+  pane.innerHTML = `
+    <div class="section">
+      <div class="section-head"><h2>All Providers</h2><span class="section-tag">${Object.keys(provStatus||{}).length} total</span></div>
+      <div class="prov-grid" id="fullProvGrid"></div>
+    </div>
+  `;
+  $('viewContainer').appendChild(pane);
+
+  const grid = $('fullProvGrid');
+  grid.innerHTML = Object.entries(provStatus||{}).map(([id, p]) =>
+    `<div class="prov-card">
+      <div class="prov-card-top">
+        <span class="prov-name">${p.label||id}</span>
+        <span class="badge ${p.status}">${p.status === 'on' ? 'Ready' : p.status === 'warn' ? 'No Key' : 'Off'}</span>
+      </div>
+      <div class="prov-meta">${p.status === 'on' ? '✓ Configured' : '—'}</div>
+    </div>`
+  ).join('');
+}
+
+// ── Models Pane ───────────────────────────────────────────────────────────
+function renderModels(sections) {
+  const pane = document.createElement('div');
+  pane.id = 'pane-models';
+  pane.className = 'view-pane';
+
+  const modelSection = sections?.models || { fields: [] };
+  const thinkingSection = sections?.thinking || { fields: [] };
+
+  pane.innerHTML = `
+    <div class="section">
+      <div class="section-head"><h2>Model Routing</h2><span class="section-tag">Tiers</span></div>
+      <div class="cfg-grid">${(modelSection.fields||[]).map(f => buildField(f)).join('')}</div>
+    </div>
+    <div class="section">
+      <div class="section-head"><h2>Extended Thinking</h2><span class="section-tag">Per-model</span></div>
+      <div class="cfg-grid">${(thinkingSection.fields||[]).map(f => buildField(f)).join('')}</div>
+    </div>
+  `;
+  $('viewContainer').appendChild(pane);
+  bindFields();
+}
+
+// ── Settings Pane ─────────────────────────────────────────────────────────
+function renderSettings(sections) {
+  const pane = document.createElement('div');
+  pane.id = 'pane-settings';
+  pane.className = 'view-pane';
+
+  const order = ['general', 'api', 'providers', 'rate_limiting', 'advanced'];
+  let html = '';
+  for (const key of order) {
+    const sec = sections?.[key];
+    if (!sec) continue;
+    const regular = sec.fields.filter(f => !f.advanced);
+    const advanced = sec.fields.filter(f => f.advanced);
+    html += `<div class="cfg-section">
+      <div class="cfg-section-title">${sec.label}</div>
+      <div class="cfg-grid">${regular.map(f => buildField(f)).join('')}</div>
+      ${advanced.length ? `
+        <button class="adv-toggle" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
+          <span class="chev">▸</span> Advanced (${advanced.length})
+        </button>
+        <div class="adv-fields">${advanced.map(f => buildField(f)).join('')}</div>
+      ` : ''}
+    </div>`;
+  }
+  pane.innerHTML = html;
+  $('viewContainer').appendChild(pane);
+  bindFields();
+}
+
+// ── Field Builder ─────────────────────────────────────────────────────────
+function buildField(f) {
+  const id = `f-${f.key}`;
+  const val = f.value ?? '';
+  const display = f.secret && val ? M : val;
+  const desc = f.description ? `<div class="cfg-desc">${f.description}</div>` : '';
+  const info = f.description ? `<span class="info-icon" title="${f.description.replace(/"/g,'&quot;')}">?</span>` : '';
 
   let input = '';
-  let extraAttr = '';
-
-  switch (field.type) {
+  switch (f.type) {
     case 'boolean':
-      input = `<input type="checkbox" id="${inputId}" data-key="${field.key}"
-                ${value === true || value === 'true' ? 'checked' : ''}
-                onchange="markDirty('${field.key}', this)">`;
+      input = `<input type="checkbox" id="${id}" data-key="${f.key}" ${(val===true||val==='true')?'checked':''} onchange="mark('${f.key}',this)">`;
       break;
     case 'select':
     case 'options':
-      const opts = (field.options || []).map(o =>
-        `<option value="${o}" ${o === value ? 'selected' : ''}>${o}</option>`
+      const opts = ['', ...(f.options||[])].map(o =>
+        `<option value="${o}" ${o===val?'selected':''}>${o||'— Select —'}</option>`
       ).join('');
-      input = `<select id="${inputId}" data-key="${field.key}" onchange="markDirty('${field.key}', this)">
-        <option value="">— Select —</option>
-        ${opts}
-      </select>`;
+      input = `<select id="${id}" data-key="${f.key}" onchange="mark('${f.key}',this)">${opts}</select>`;
       break;
     case 'textarea':
-      input = `<textarea id="${inputId}" data-key="${field.key}"
-                onchange="markDirty('${field.key}', this)"
-                placeholder="${field.placeholder || ''}">${displayValue}</textarea>`;
+      input = `<textarea id="${id}" data-key="${f.key}" onchange="mark('${f.key}',this)">${display}</textarea>`;
       break;
     case 'number':
-      input = `<input type="number" id="${inputId}" data-key="${field.key}"
-                value="${displayValue}"
-                onchange="markDirty('${field.key}', this)"
-                placeholder="${field.placeholder || ''}">`;
+      input = `<input type="number" id="${id}" data-key="${f.key}" value="${display}" onchange="mark('${f.key}',this)">`;
       break;
     default:
-      extraAttr = isSecret ? `type="password"` : `type="text"`;
-      input = `<input ${extraAttr} id="${inputId}" data-key="${field.key}"
-                value="${displayValue}"
-                onchange="markDirty('${field.key}', this)"
-                placeholder="${field.placeholder || ''}"
-                ${isSecret && value ? 'data-masked="true"' : ''}>`;
+      input = `<input type="${f.secret?'password':'text'}" id="${id}" data-key="${f.key}" value="${display}" onchange="mark('${f.key}',this)" ${f.secret&&val?'data-masked':''}>`;
   }
-
-  return `
-    <div class="field-group" data-field="${field.key}">
-      <label for="${inputId}">
-        ${field.label}
-        ${field.description ? `<span class="field-source" title="${field.description}">ⓘ</span>` : ''}
-      </label>
-      ${input}
-      ${field.description ? `<div class="field-desc">${field.description}</div>` : ''}
-    </div>
-  `;
+  return `<div class="cfg-field" data-key="${f.key}"><label class="cfg-label" for="${id}">${f.label}${info}</label>${input}${desc}</div>`;
 }
 
-// ---------------------------------------------------------------------------
-// Dirty State Tracking
-// ---------------------------------------------------------------------------
-function getFieldValue(input) {
-  if (input.type === 'checkbox') return input.checked;
-  if (input.dataset.masked && input.value === MASKED) return null; // unchanged secret
-  return input.value;
+function bindFields() {
+  $$('.cfg-field input, .cfg-field select, .cfg-field textarea').forEach(el => {
+    const key = el.dataset.key;
+    if (key) {
+      // restore dirty state if previously marked
+    }
+  });
 }
 
-function markDirty(key, input) {
-  const val = getFieldValue(input);
-  if (val === null) {
-    state.dirtyFields.delete(key);
-  } else {
-    state.dirtyFields.set(key, val);
-  }
-  updateDirtyState();
+// ── Dirty Tracking ────────────────────────────────────────────────────────
+function getVal(el) {
+  if (el.type === 'checkbox') return el.checked;
+  if (el.dataset.masked && el.value === M) return null;
+  return el.value;
 }
-
-function updateDirtyState() {
-  const count = state.dirtyFields.size;
-  const el = $('dirtyState');
+function mark(key, el) {
+  const v = getVal(el);
+  if (v === null) S.dirty.delete(key); else S.dirty.set(key, v);
+  updateDirty();
+}
+function updateDirty() {
+  const n = S.dirty.size;
+  const di = $('dirtyIndicator');
   const btn = $('applyBtn');
-
-  if (count > 0) {
-    el.classList.add('dirty');
-    el.innerHTML = `<span class="dirty-dot"></span> ${count} change${count > 1 ? 's' : ''} pending`;
+  if (n > 0) {
+    di.classList.add('dirty');
+    di.innerHTML = `<span class="di-dot"></span> ${n} pending`;
     btn.disabled = false;
   } else {
-    el.classList.remove('dirty');
-    el.innerHTML = `<span class="dirty-dot"></span> No changes`;
+    di.classList.remove('dirty');
+    di.innerHTML = `<span class="di-dot"></span> No changes`;
     btn.disabled = true;
   }
 }
 
-// ---------------------------------------------------------------------------
-// Validate & Apply
-// ---------------------------------------------------------------------------
-async function validate() {
-  const msg = $('actionMessage');
-  msg.innerHTML = '<span class="spinner"></span> Validating...';
-
+// ── Actions ───────────────────────────────────────────────────────────────
+async function validateConfig() {
+  const msg = $('footbarMsg');
+  msg.innerHTML = '<span class="spin"></span> Validating...';
   try {
-    const changes = Object.fromEntries(state.dirtyFields);
-    const result = await api('/admin/api/config/validate', {
-      method: 'POST',
-      body: JSON.stringify(changes),
-    });
-    msg.className = 'action-message success';
-    msg.textContent = '✓ Config valid';
-    showToast('Configuration is valid', 'success');
-  } catch (err) {
-    msg.className = 'action-message error';
-    msg.textContent = `✗ ${err.message}`;
-    showToast(`Validation failed: ${err.message}`, 'error');
+    const changes = Object.fromEntries(S.dirty);
+    await api('/admin/api/config/validate', { method: 'POST', body: JSON.stringify(changes) });
+    msg.className = 'footbar-center ok';
+    msg.textContent = '✓ OK';
+    toast('Config valid', 'success');
+  } catch (e) {
+    msg.className = 'footbar-center err';
+    msg.textContent = `✗ ${e.message}`;
+    toast(e.message, 'error');
   }
 }
 
-async function apply() {
-  const msg = $('actionMessage');
+async function applyConfig() {
+  const msg = $('footbarMsg');
   const btn = $('applyBtn');
-  msg.innerHTML = '<span class="spinner"></span> Applying...';
+  msg.innerHTML = '<span class="spin"></span> Applying...';
   btn.disabled = true;
-
   try {
-    const changes = Object.fromEntries(state.dirtyFields);
-    const result = await api('/admin/api/config/apply', {
-      method: 'POST',
-      body: JSON.stringify(changes),
-    });
-    msg.className = 'action-message success';
-    msg.textContent = '✓ Changes applied successfully';
-    state.dirtyFields.clear();
-    updateDirtyState();
-    showToast('Configuration saved! Restart may be required.', 'success');
-  } catch (err) {
-    msg.className = 'action-message error';
-    msg.textContent = `✗ ${err.message}`;
+    const changes = Object.fromEntries(S.dirty);
+    await api('/admin/api/config/apply', { method: 'POST', body: JSON.stringify(changes) });
+    msg.className = 'footbar-center ok';
+    msg.textContent = '✓ Saved';
+    S.dirty.clear();
+    updateDirty();
+    toast('Applied — restart may be needed', 'success');
+  } catch (e) {
+    msg.className = 'footbar-center err';
+    msg.textContent = `✗ ${e.message}`;
     btn.disabled = false;
-    showToast(`Failed to apply: ${err.message}`, 'error');
+    toast(e.message, 'error');
   }
 }
 
-// ---------------------------------------------------------------------------
-// Boot
-// ---------------------------------------------------------------------------
-document.addEventListener('DOMContentLoaded', () => {
-  load();
-  // Start activity simulation
-  const uptime = $('uptimeDisplay');
-  let seconds = 0;
-  setInterval(() => {
-    seconds++;
-    if (seconds < 60) uptime.textContent = `${seconds}s`;
-    else uptime.textContent = `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
-  }, 1000);
-});
+// ── Boot ──────────────────────────────────────────────────────────────────
+async function load() {
+  try {
+    const data = await api('/admin/api/config');
+    S.config = data;
+
+    renderNav();
+    $('viewContainer').innerHTML = '';
+
+    const sections = data.sections || {};
+    const provStatus = data.provider_status || {};
+
+    renderDashboard(sections, provStatus);
+    renderProviders(provStatus);
+    renderModels(sections);
+    renderSettings(sections);
+
+    updateDirty();
+    toast('Console ready', 'info');
+  } catch (e) {
+    toast('Failed to load: ' + e.message, 'error');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', load);

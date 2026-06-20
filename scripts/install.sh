@@ -2,16 +2,16 @@
 # =============================================================================
 # FC-Play Installer — One command to rule them all
 # =============================================================================
-# curl -fsSL https://raw.githubusercontent.com/Alishahryar1/fc-play/main/scripts/install.sh | sh
+# curl -fsSL https://raw.githubusercontent.com/XunowID/fc-play/main/scripts/install.sh | sh
 #
 # Or with extras:
-#   curl -fsSL https://raw.githubusercontent.com/Alishahryar1/fc-play/main/scripts/install.sh | sh -s -- --voice
+#   curl -fsSL https://raw.githubusercontent.com/XunowID/fc-play/main/scripts/install.sh | sh -s -- --voice
 # =============================================================================
 
 set -e
 
 # ─── Configuration ──────────────────────────────────────────────────────────
-REPO="git+https://github.com/Alishahryar1/fc-play.git"
+REPO="git+https://github.com/XunowID/fc-play.git"
 PYTHON_VERSION="3.12"
 MIN_UV="0.4.0"
 
@@ -151,5 +151,5 @@ echo "  🔗 Add your API key to ~/.fc-play/.env:"
 echo "     CUSTOM_API_KEY=sk-ant-..."
 echo "     CUSTOM_API_MODEL=claude-sonnet-4-20250514"
 echo ""
-echo "Need help? Open an issue: https://github.com/Alishahryar1/fc-play/issues"
+echo "Need help? Open an issue: https://github.com/XunowID/fc-play/issues"
 echo ""

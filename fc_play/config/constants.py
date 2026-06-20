@@ -1,19 +1,71 @@
-"""FC-Play constants."""
+"""FC-Play constants — providers, model lists, branding."""
 
 from __future__ import annotations
 
-# Branding
+# Branding (no AI/Claude mentions in UI-facing names)
 APP_NAME = "fc-play"
 APP_DISPLAY = "FC-Play"
-APP_TAGLINE = "Play with Claude — Free. Fast. Fabulous."
+APP_TAGLINE = "Multi-provider model gateway. Fast. Flexible. Fabulous."
+APP_DESCRIPTION = "Proxy gateway for 20+ model providers — route, manage, and monitor."
 
 # HTTP
 HTTP_READ_TIMEOUT = 120
 HTTP_WRITE_TIMEOUT = 10
 HTTP_CONNECT_TIMEOUT = 30
 
-# Model families
-CLAUDE_OPUS_MODELS = [
+# ─── All supported providers ────────────────────────────────────────────────
+# Format: slug → display name
+PROVIDERS = {
+    "custom": "Direct API",
+    "anthropic": "Anthropic",
+    "openai": "OpenAI",
+    "openrouter": "OpenRouter",
+    "gemini": "Gemini",
+    "deepseek": "DeepSeek",
+    "mistral": "Mistral",
+    "codestral": "Codestral",
+    "groq": "Groq",
+    "fireworks": "Fireworks",
+    "together": "Together",
+    "nvidia_nim": "NVIDIA NIM",
+    "cerebras": "Cerebras",
+    "kimi": "Kimi",
+    "wafer": "Wafer",
+    "opencode": "OpenCode",
+    "zai": "Z.ai",
+    "ollama": "Ollama",
+    "lmstudio": "LM Studio",
+    "llamacpp": "llama.cpp",
+}
+
+# Provider prefixes for model routing
+PROVIDER_PREFIXES = {
+    "custom": "Direct API",
+    "anthropic": "Anthropic",
+    "openai": "OpenAI",
+    "openrouter": "OpenRouter",
+    "gemini": "Gemini",
+    "deepseek": "DeepSeek",
+    "mistral": "Mistral",
+    "codestral": "Codestral",
+    "groq": "Groq",
+    "fireworks": "Fireworks",
+    "together": "Together",
+    "nvidia_nim": "NVIDIA NIM",
+    "cerebras": "Cerebras",
+    "kimi": "Kimi",
+    "wafer": "Wafer",
+    "opencode": "OpenCode",
+    "opencode_go": "OpenCode Go",
+    "zai": "Z.ai",
+    "ollama": "Ollama",
+    "lmstudio": "LM Studio",
+    "llamacpp": "llama.cpp",
+}
+
+# ─── Model families ─────────────────────────────────────────────────────────
+# Opus-tier (capability tier, not brand-specific)
+MODELS_OPUS = [
     "claude-opus-4-20250514",
     "claude-opus-4-20250514-v1",
     "claude-opus-4-8-20250601",
@@ -26,7 +78,8 @@ CLAUDE_OPUS_MODELS = [
     "claude-opus-3",
 ]
 
-CLAUDE_SONNET_MODELS = [
+# Sonnet-tier
+MODELS_SONNET = [
     "claude-sonnet-4-20250514",
     "claude-sonnet-4-20250514-v1",
     "claude-sonnet-4-6",
@@ -37,7 +90,8 @@ CLAUDE_SONNET_MODELS = [
     "claude-3-sonnet",
 ]
 
-CLAUDE_HAIKU_MODELS = [
+# Haiku-tier
+MODELS_HAIKU = [
     "claude-haiku-4-20250514",
     "claude-haiku-4-20250514-v1",
     "claude-haiku-4-5",
@@ -47,17 +101,4 @@ CLAUDE_HAIKU_MODELS = [
     "claude-haiku-3",
 ]
 
-CLAUDE_MODELS = CLAUDE_OPUS_MODELS + CLAUDE_SONNET_MODELS + CLAUDE_HAIKU_MODELS
-
-# Provider prefixes
-PROVIDER_PREFIXES = {
-    "custom": "Custom API (Anthropic)",
-    "openai": "OpenAI",
-    "openrouter": "OpenRouter",
-    "gemini": "Google Gemini",
-    "deepseek": "DeepSeek",
-    "mistral": "Mistral AI",
-    "groq": "Groq",
-    "fireworks": "Fireworks AI",
-    "together": "Together AI",
-}
+MODELS_ALL = MODELS_OPUS + MODELS_SONNET + MODELS_HAIKU
