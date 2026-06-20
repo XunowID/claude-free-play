@@ -18,15 +18,15 @@ from fc_play.config.settings import get_settings
 from fc_play.tui.panels import (make_dashboard, make_header, make_help_panel,
                                  make_model_table, make_progress_bar,
                                  make_request_log, make_status_table)
-from fc_play.tui.themes import DEFAULT_THEME, get_theme
+from fc_play.tui.themes import DEFAULT_THEME
 
 
 class TUIApp:
     """Interactive terminal dashboard for FC-Play."""
 
-    def __init__(self, theme_name: str = "midnight"):
+    def __init__(self):
         self.console = Console()
-        self.theme = get_theme(theme_name)
+        self.theme = DEFAULT_THEME
         self.settings = get_settings()
         self.running = False
         self.start_time = datetime.now()
@@ -136,9 +136,9 @@ class TUIApp:
         self.running = False
 
 
-def run_tui(theme: str = "midnight"):
+def run_tui():
     """Launch the TUI dashboard."""
-    app = TUIApp(theme_name=theme)
+    app = TUIApp()
     try:
         app.run()
     except KeyboardInterrupt:

@@ -119,13 +119,10 @@ def server(
 
 
 @cli.command()
-def tui(
-    theme: str = typer.Option("midnight", "--theme", "-t",
-                              help="midnight | emerald | ruby"),
-):
+def tui():
     """Launch the terminal dashboard."""
     from fc_play.tui.app import run_tui
-    run_tui(theme=theme)
+    run_tui()
 
 
 @cli.command()

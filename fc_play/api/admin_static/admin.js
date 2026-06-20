@@ -1,6 +1,6 @@
 /* ===========================================================================
-   FC-Play · Gateway Console — Controller
-   Top tabs, warm palette, compact layout
+   Claude Free Play · Gateway Console — Controller
+   Single theme: warm amber on obsidian
    =========================================================================== */
 
 // ── State ─────────────────────────────────────────────────────────────────
@@ -32,15 +32,23 @@ async function api(path, opts = {}) {
 
 // ── Views ─────────────────────────────────────────────────────────────────
 const VIEWS = [
-  { id: 'dashboard', label: 'Dashboard', title: 'Dashboard' },
-  { id: 'providers', label: 'Providers', title: 'Provider Configuration' },
-  { id: 'models',    label: 'Models',    title: 'Model Routing' },
-  { id: 'settings',  label: 'Settings',  title: 'Settings' },
+  { id: 'dashboard', label: 'Dashboard', title: 'Dashboard', icon: '#dashboard-icon' },
+  { id: 'providers', label: 'Providers', title: 'Provider Configuration', icon: '#providers-icon' },
+  { id: 'models',    label: 'Models',    title: 'Model Routing', icon: '#models-icon' },
+  { id: 'settings',  label: 'Settings',  title: 'Settings', icon: '#settings-icon' },
 ];
 
 function renderNav() {
   $('topNav').innerHTML = VIEWS.map((v, i) =>
-    `<button class="tab ${i===0?'active':''}" data-view="${v.id}" onclick="switchView('${v.id}')">${v.label}</button>`
+    `<button class="tab ${i===0?'active':''}" data-view="${v.id}" onclick="switchView('${v.id}')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px">
+        ${v.id === 'dashboard' ? '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>' : ''}
+        ${v.id === 'providers' ? '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>' : ''}
+        ${v.id === 'models' ? '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>' : ''}
+        ${v.id === 'settings' ? '<circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>' : ''}
+      </svg>
+      ${v.label}
+    </button>`
   ).join('');
 }
 
@@ -65,25 +73,25 @@ function renderDashboard(sections, provStatus) {
     <div class="stats-row">
       <div class="stat-card">
         <div class="stat-icon green">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
         </div>
         <div><span class="stat-num">${allOk}/${allTotal}</span><span class="stat-lbl">Connected Providers</span></div>
       </div>
       <div class="stat-card">
         <div class="stat-icon amber">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
         </div>
         <div><span class="stat-num" id="statModels">${Object.keys(provStatus||{}).length}</span><span class="stat-lbl">Available Models</span></div>
       </div>
       <div class="stat-card">
         <div class="stat-icon blue">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
         </div>
         <div><span class="stat-num">0</span><span class="stat-lbl">Active Requests</span></div>
       </div>
       <div class="stat-card">
         <div class="stat-icon neutral">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
         <div><span class="stat-num" id="uptimeVal">0s</span><span class="stat-lbl">Uptime</span></div>
       </div>
@@ -104,14 +112,14 @@ function renderDashboard(sections, provStatus) {
   const pg = $('dashProvGrid');
   pg.innerHTML = Object.entries(provStatus||{}).map(([id, p]) => {
     const keysHtml = (p.keys||[]).map(k =>
-      `<span class="key-chip ${k.has_value?'on':'off'}" title="Key ${k.index}">K${k.index}</span>`
+      `<span class="key-chip ${k.has_value?'on':'off'}" title="${k.masked}">K${k.index}</span>`
     ).join('');
     return `<div class="prov-card" onclick="switchView('providers')" style="cursor:pointer">
         <div class="prov-card-top">
           <span class="prov-name">${p.label||id}</span>
           <span class="badge ${p.status}">${p.status === 'on' ? 'Ready' : 'No Key'}</span>
         </div>
-        <div class="prov-meta" style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">${keysHtml}</div>
+        <div class="prov-meta" style="margin-top:5px;display:flex;gap:4px;flex-wrap:wrap">${keysHtml}</div>
       </div>`;
   }).join('');
 
@@ -119,7 +127,8 @@ function renderDashboard(sections, provStatus) {
   let sec = 0;
   setInterval(() => {
     sec++;
-    $('uptimeVal').textContent = sec < 60 ? `${sec}s` : `${Math.floor(sec/60)}m ${sec%60}s`;
+    const el = $('uptimeVal');
+    if (el) el.textContent = sec < 60 ? `${sec}s` : `${Math.floor(sec/60)}m ${sec%60}s`;
   }, 1000);
 }
 
@@ -148,7 +157,7 @@ function renderProviders(provStatus) {
         <span class="badge ${p.status}">${p.status === 'on' ? 'Ready' : p.status === 'warn' ? 'No Key' : 'Off'}</span>
       </div>
       <div class="prov-meta">${p.key_count || 0} key${(p.key_count||0) !== 1 ? 's' : ''}</div>
-      <div class="prov-meta" style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">${keysHtml}</div>
+      <div class="prov-meta" style="margin-top:5px;display:flex;gap:4px;flex-wrap:wrap">${keysHtml}</div>
     </div>`;
   }).join('');
 }

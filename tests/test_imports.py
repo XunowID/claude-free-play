@@ -13,9 +13,8 @@ def test_import_config():
 
 
 def test_import_tui():
-    from fc_play.tui.themes import get_theme
-    t = get_theme("midnight")
-    assert t.name == "midnight"
+    from fc_play.tui.themes import DEFAULT_THEME
+    assert DEFAULT_THEME.name == "midnight"
 
 
 def test_import_cli():

@@ -88,12 +88,12 @@ fc-server
 fc-admin
 
 # Launch terminal dashboard
-fc-play-tui --theme midnight
+fc-play-tui
 
 # Or via subcommand (same)
 fc-play server --open
 fc-play admin
-fc-play tui --theme emerald
+fc-play tui
 fc-play status
 fc-play version
 ```
@@ -147,13 +147,13 @@ HOST=0.0.0.0
 
 ---
 
-## 🎨 Themes
+## 📊 Terminal Dashboard
 
 ```bash
-fc-play-tui --theme midnight   # indigo + dark
-fc-play-tui --theme emerald    # green + dark
-fc-play-tui --theme ruby       # crimson + dark
+fc-play-tui
 ```
+
+Opens the terminal dashboard with the default Midnight theme (indigo + dark OLED).
 
 ---
 
