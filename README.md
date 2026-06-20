@@ -25,26 +25,26 @@
 
 ## 🔧 Prerequisites
 
-Sebelum install, pastikan sudah siap:
+Make sure you have these installed before proceeding:
 
 ### macOS / Linux
-| Tool | Cara Install |
+| Tool | Installation |
 |------|-------------|
-| **Python 3.12+** | `uv python install 3.12` (via uv) atau [python.org](https://python.org) |
-| **uv** (wajib) | `curl -LsSf https://astral.sh/uv/install.sh | sh` |
-| **Git** | `brew install git` atau `apt install git` / `pacman -S git` |
-| **Claude CLI** (untuk `fc-play`) | `npm install -g @anthropic-ai/claude-code` |
+| **Python 3.12+** | `uv python install 3.12` (via uv) or [python.org](https://python.org) |
+| **uv** (required) | `curl -LsSf https://astral.sh/uv/install.sh | sh` |
+| **Git** | `brew install git` or `apt install git` / `pacman -S git` |
+| **Claude CLI** (for `fc-play`) | `npm install -g @anthropic-ai/claude-code` |
 | **curl** | Usually pre-installed |
 
 ### Windows (PowerShell)
-| Tool | Cara Install |
+| Tool | Installation |
 |------|-------------|
-| **Python 3.12+** | `uv python install 3.12` (via uv) atau [python.org](https://python.org) |
-| **uv** (wajib) | `powershell -c "irm https://astral.sh/uv/install.ps1 | iex"` |
-| **Git** | [git-scm.com](https://git-scm.com) atau `winget install Git.Git` |
-| **Claude CLI** (untuk `fc-play`) | `npm install -g @anthropic-ai/claude-code` |
+| **Python 3.12+** | `uv python install 3.12` (via uv) or [python.org](https://python.org) |
+| **uv** (required) | `powershell -c "irm https://astral.sh/uv/install.ps1 | iex"` |
+| **Git** | [git-scm.com](https://git-scm.com) or `winget install Git.Git` |
+| **Claude CLI** (for `fc-play`) | `npm install -g @anthropic-ai/claude-code` |
 
-> **Catatan:** Claude CLI (`claude`) hanya diperlukan kalau mau pakai `fc-play` untuk masuk ke Claude. Kalau cuma mau proxy servernya aja, cukup Python + uv.
+> **Note:** Claude CLI (`claude`) is only needed if using `fc-play` to launch Claude. If you only need the proxy server, Python + uv is enough.
 
 ---
 
@@ -70,31 +70,31 @@ uv sync
 
 ## 🎯 Commands
 
-### Prefixes — Pilih sesuai kebutuhan
+### Prefixes — Choose your command
 
-| Command | Fungsi |
-|---------|--------|
-| `fc-play` | 🎮 Masuk ke Claude via proxy |
-| `fc-server` | 🌐 Start proxy server + buka admin otomatis |
-| `fc-admin` | 🖥️ Buka panel admin di browser |
+| Command | Purpose |
+|---------|---------|
+| `fc-play` | 🎮 Launch Claude through proxy |
+| `fc-server` | 🌐 Start proxy server + auto-open admin |
+| `fc-admin` | 🖥️ Open admin panel in browser |
 | `fc-play-tui` | 📊 Launch terminal dashboard |
 
 ### Detail
 
 ```bash
-# Masuk ke Claude via proxy (auto-start server jika belum jalan)
+# Launch Claude through proxy (auto-starts server if not running)
 fc-play
 
-# Start proxy server + langsung buka admin panel
+# Start proxy server + auto-open admin panel
 fc-server
 
-# Buka admin panel di browser (server harus sudah jalan)
+# Open admin panel in browser (server must be running)
 fc-admin
 
 # Launch terminal dashboard
 fc-play-tui --theme midnight
 
-# Atau via subcommand (sama aja)
+# Or via subcommand (same)
 fc-play server --open
 fc-play admin
 fc-play tui --theme emerald
