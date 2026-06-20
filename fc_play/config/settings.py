@@ -331,6 +331,11 @@ def _mask_key(key: str) -> str:
     return key[:8] + "..." + key[-4:]
 
 
+def invalidate_settings_cache() -> None:
+    """Clear the cached settings so next call reloads from env."""
+    get_settings.cache_clear()
+
+
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
     _init_key_map()

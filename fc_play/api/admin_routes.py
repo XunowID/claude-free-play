@@ -11,8 +11,8 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from loguru import logger
 
 from fc_play.config.constants import PROVIDERS
-from fc_play.config.paths import config_file
-from fc_play.config.settings import Settings, get_settings
+from fc_play.config.paths import config_file, data_dir
+from fc_play.config.settings import Settings, get_settings, invalidate_settings_cache
 from fc_play.providers.router import provider_health
 
 router = APIRouter()
@@ -188,14 +188,41 @@ async def validate_config(request: Request):
 async def apply_config(request: Request):
     try:
         changes = await request.json()
-        cfg = config_file()
-        existing = {}
-        if cfg.exists():
-            existing = json.loads(cfg.read_text(encoding="utf-8"))
-        existing.update(changes)
-        cfg.write_text(json.dumps(existing, indent=2), encoding="utf-8")
-        logger.info("Config saved: {} keys", len(changes))
-        return JSONResponse(content={"saved": True, "restart_required": True})
+        if not changes:
+            return JSONResponse(content={"saved": True, "restart_required": False})
+
+        env_path = data_dir() / ".env"
+
+        # Read existing .env
+        existing_lines: list[str] = []
+        if env_path.exists():
+            existing_lines = env_path.read_text(encoding="utf-8").splitlines()
+
+        # Build lookup of existing keys
+        seen_keys: set[str] = set()
+        updated_lines: list[str] = []
+        for line in existing_lines:
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                updated_lines.append(line)
+                continue
+            if "=" in stripped:
+                key = stripped.split("=", 1)[0].strip()
+                if key in changes:
+                    seen_keys.add(key)
+                    updated_lines.append(f'{key}="{changes.pop(key)}"')
+                else:
+                    updated_lines.append(line)
+
+        # Append any remaining new keys
+        for key, value in changes.items():
+            seen_keys.add(key)
+            updated_lines.append(f'{key}="{value}"')
+
+        env_path.write_text("\n".join(updated_lines) + "\n", encoding="utf-8")
+        invalidate_settings_cache()
+        logger.info("Config saved via admin: {} keys", len(changes) + len(seen_keys) - len(changes))
+        return JSONResponse(content={"saved": True, "restart_required": False})
     except Exception as e:
         logger.error("Save failed: {}", e)
         return JSONResponse(content={"saved": False, "error": str(e)}, status_code=422)

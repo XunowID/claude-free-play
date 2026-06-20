@@ -94,8 +94,7 @@ def test_configured_providers():
     assert "llamacpp" in prov
 
 
-def test_theme_registry():
-    from fc_play.tui.themes import THEMES
-    assert "midnight" in THEMES
-    assert "emerald" in THEMES
-    assert "ruby" in THEMES
+def test_theme_default():
+    from fc_play.tui.themes import DEFAULT_THEME
+    assert DEFAULT_THEME.name == "midnight"
+    assert DEFAULT_THEME.primary == "#6366f1"
