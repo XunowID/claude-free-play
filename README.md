@@ -33,7 +33,6 @@ Make sure you have these installed before proceeding:
 | **Python 3.12+** | `uv python install 3.12` (via uv) or [python.org](https://python.org) |
 | **uv** (required) | `curl -LsSf https://astral.sh/uv/install.sh | sh` |
 | **Git** | `brew install git` or `apt install git` / `pacman -S git` |
-| **Claude CLI** (for `fc-play`) | `npm install -g @anthropic-ai/claude-code` |
 | **curl** | Usually pre-installed |
 
 ### Windows (PowerShell)
@@ -42,9 +41,6 @@ Make sure you have these installed before proceeding:
 | **Python 3.12+** | `uv python install 3.12` (via uv) or [python.org](https://python.org) |
 | **uv** (required) | `powershell -c "irm https://astral.sh/uv/install.ps1 | iex"` |
 | **Git** | [git-scm.com](https://git-scm.com) or `winget install Git.Git` |
-| **Claude CLI** (for `fc-play`) | `npm install -g @anthropic-ai/claude-code` |
-
-> **Note:** Claude CLI (`claude`) is only needed if using `fc-play` to launch Claude. If you only need the proxy server, Python + uv is enough.
 
 ---
 
@@ -52,16 +48,16 @@ Make sure you have these installed before proceeding:
 
 ```bash
 # macOS / Linux
-curl -fsSL https://raw.githubusercontent.com/XunowID/fc-play/main/scripts/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/XunowID/claude-free-play/main/scripts/install.sh | sh
 
 # Windows (PowerShell)
-Invoke-Expression (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/XunowID/fc-play/main/scripts/install.ps1").Content
+Invoke-Expression (Invoke-WebRequest -Uri "https://raw.githubusercontent.com/XunowID/claude-free-play/main/scripts/install.ps1").Content
 ```
 
 ### Or from source
 
 ```bash
-git clone https://github.com/XunowID/fc-play.git
+git clone https://github.com/XunowID/claude-free-play.git
 cd fc-play
 uv sync
 ```
@@ -74,7 +70,7 @@ uv sync
 
 | Command | Purpose |
 |---------|---------|
-| `fc-play` | 🎮 Launch Claude through proxy |
+| `fc-play` | 🎮 Launch AI client through proxy |
 | `fc-server` | 🌐 Start proxy server + auto-open admin |
 | `fc-admin` | 🖥️ Open admin panel in browser |
 | `fc-play-tui` | 📊 Launch terminal dashboard |
@@ -141,8 +137,8 @@ OPENAI_API_KEY=sk-...
 OPENROUTER_API_KEY=sk-or-...
 
 # Model routing (provider/model-name)
-MODEL=custom/claude-sonnet-4-20250514
-MODEL_OPUS=custom/claude-opus-4-20250514
+MODEL=anthropic/claude-sonnet-4-20250514
+MODEL_OPUS=anthropic/claude-opus-4-20250514
 
 # Server
 PORT=3010
@@ -184,7 +180,7 @@ fc-play/
 ## 🛠️ Development
 
 ```bash
-git clone https://github.com/XunowID/fc-play.git
+git clone https://github.com/XunowID/claude-free-play.git
 cd fc-play
 uv sync
 uv run ruff format .

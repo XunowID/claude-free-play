@@ -14,6 +14,6 @@ Building **FC-Play** — multi-provider model gateway. 20+ providers. One endpoi
 - **Prefix**: `fc-play` everywhere
 - **Admin UI**: Top navigation, amber/orange accent, warmer dark theme, pill buttons, no sidebar
 - **Code**: Clean Python 3.12, no type ignores, comprehensive provider support
-- **Entry points**: `fc-play` (Claude launcher), `fc-server` (proxy + admin), `fc-admin` (admin panel), `fc-play-tui` (dashboard)
+- **Entry points**: `fc-play` (launcher), `fc-server` (proxy + admin), `fc-admin` (admin panel), `fc-play-tui` (dashboard)
 - **Authors**: XunowID, zahrinurrasyiid
-- **No AI/Claude mentions** in admin panel labels
+- **No AI branding** in UI labels

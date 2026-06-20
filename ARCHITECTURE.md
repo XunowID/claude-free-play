@@ -2,12 +2,12 @@
 
 ## Overview
 
-FC-Play is a proxy server and CLI toolkit that intercepts API calls from AI clients (Claude Code, Codex CLI, VS Code extensions) and routes them through configurable model providers. It provides a unified interface to access any AI model through a single API endpoint.
+FC-Play is a proxy server and CLI toolkit that intercepts API calls from AI clients (Codex CLI, VS Code extensions) and routes them through configurable model providers. It provides a unified interface to access any AI model through a single API endpoint.
 
 ## Core Flow
 
 ```
-Client (Claude Code / Codex CLI)
+Client (AI client / Codex CLI)
   │
   ▼
 FC-Play Proxy (FastAPI server)
@@ -32,7 +32,7 @@ FC-Play Proxy (FastAPI server)
 
 ### 2. CLI Layer (`fc_play/cli/`)
 - **entrypoints.py** — Typer commands: `server`, `tui`, `admin`, `status`
-- **launchers/** — Process management for claude/codex launchers
+- **launchers/** — Process management for codex launchers
 
 ### 3. TUI Layer (`fc_play/tui/`)
 - **app.py** — Interactive dashboard with live refresh

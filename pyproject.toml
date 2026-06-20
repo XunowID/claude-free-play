@@ -85,6 +85,6 @@ check_untyped_defs = true
 warn_unused_ignores = true
 
 [project.urls]
-Homepage = "https://github.com/XunowID/fc-play"
-Source = "https://github.com/XunowID/fc-play"
-Issues = "https://github.com/XunowID/fc-play/issues"
+Homepage = "https://github.com/XunowID/claude-free-play"
+Source = "https://github.com/XunowID/claude-free-play"
+Issues = "https://github.com/XunowID/claude-free-play/issues"
